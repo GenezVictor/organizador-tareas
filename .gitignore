@@ -7,6 +7,7 @@ venv/
 # Base de datos
 *.db
 *.sqlite3
+tareas.db
 
 # Sistema operativo
 .DS_Store
@@ -15,6 +16,3 @@ Thumbs.db
 # Entornos virtuales
 .env
 .venv
-
-# Logs
-*.log
