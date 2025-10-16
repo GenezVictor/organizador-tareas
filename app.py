@@ -4,8 +4,13 @@ import os
 
 app = Flask(__name__)
 
+def get_db_path():
+    # En Railway usa /tmp/ para escritura, o el directorio actual
+    return os.path.join(os.getcwd(), 'tareas.db')
+
 def init_db():
-    conn = sqlite3.connect('tareas.db')
+    db_path = get_db_path()
+    conn = sqlite3.connect(db_path)
     c = conn.cursor()
     c.execute('''
         CREATE TABLE IF NOT EXISTS tareas (
@@ -21,10 +26,15 @@ def init_db():
     conn.commit()
     conn.close()
 
+def get_db_connection():
+    db_path = get_db_path()
+    conn = sqlite3.connect(db_path)
+    conn.row_factory = sqlite3.Row
+    return conn
+
 @app.route('/')
 def index():
-    conn = sqlite3.connect('tareas.db')
-    conn.row_factory = sqlite3.Row
+    conn = get_db_connection()
     c = conn.cursor()
     c.execute('SELECT * FROM tareas ORDER BY parent_id, id')
     tareas = c.fetchall()
@@ -37,7 +47,7 @@ def agregar_tarea():
     descripcion = request.form['descripcion']
     parent_id = request.form['parent_id'] or None
     
-    conn = sqlite3.connect('tareas.db')
+    conn = get_db_connection()
     c = conn.cursor()
     c.execute('INSERT INTO tareas (titulo, descripcion, parent_id) VALUES (?, ?, ?)',
               (titulo, descripcion, parent_id))
@@ -47,7 +57,7 @@ def agregar_tarea():
 
 @app.route('/completar/<int:tarea_id>')
 def completar_tarea(tarea_id):
-    conn = sqlite3.connect('tareas.db')
+    conn = get_db_connection()
     c = conn.cursor()
     c.execute('UPDATE tareas SET completada = NOT completada WHERE id = ?', (tarea_id,))
     conn.commit()
