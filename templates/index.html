@@ -1,42 +1,105 @@
 {% extends "base.html" %}
 
 {% block content %}
+<!-- Selector de Proyectos -->
 <div class="card mb-4">
     <div class="card-body">
-        <h5>Agregar Nueva Tarea</h5>
-        <form action="/agregar" method="POST">
-            <input type="text" name="titulo" class="form-control mb-2" placeholder="Título" required>
-            <textarea name="descripcion" class="form-control mb-2" placeholder="Descripción"></textarea>
-            <select name="parent_id" class="form-control mb-2">
-                <option value="">Tarea Principal</option>
-                {% for tarea in tareas %}
-                <option value="{{ tarea.id }}">{{ tarea.titulo }}</option>
-                {% endfor %}
-            </select>
-            <button type="submit" class="btn btn-primary">Agregar</button>
+        <h5>📁 Mis Proyectos</h5>
+        <div class="d-flex flex-wrap gap-2 mb-3">
+            {% for proyecto in proyectos %}
+            <a href="/?proyecto_id={{ proyecto.id }}" 
+               class="btn btn-sm {% if proyecto.id == proyecto_activo_id %}btn-primary{% else %}btn-outline-primary{% endif %}">
+                {{ proyecto.nombre }}
+            </a>
+            {% endfor %}
+        </div>
+        
+        <!-- Formulario para crear nuevo proyecto -->
+        <form action="/crear_proyecto" method="POST" class="row g-2">
+            <div class="col-md-5">
+                <input type="text" name="nombre_proyecto" class="form-control form-control-sm" placeholder="Nuevo proyecto" required>
+            </div>
+            <div class="col-md-5">
+                <input type="text" name="descripcion_proyecto" class="form-control form-control-sm" placeholder="Descripción (opcional)">
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-success btn-sm w-100">+ Crear</button>
+            </div>
         </form>
     </div>
 </div>
 
-<div class="card">
+<!-- Formulario para agregar tareas -->
+<div class="card mb-4">
     <div class="card-body">
-        <h5>Mis Tareas</h5>
-        {% for tarea in tareas %}
-        <div class="border p-2 mb-2 {% if tarea.completada %}bg-light{% endif %}">
-            <div class="d-flex justify-content-between">
-                <div>
-                    <strong>{{ tarea.titulo }}</strong>
-                    {% if tarea.descripcion %}<br><small>{{ tarea.descripcion }}</small>{% endif %}
-                    {% if tarea.parent_id %}<br><small class="text-muted">← Subtarea</small>{% endif %}
+        <h5>➕ Agregar Nueva Tarea</h5>
+        <form action="/agregar" method="POST">
+            <input type="hidden" name="proyecto_id" value="{{ proyecto_activo_id }}">
+            <div class="row g-2">
+                <div class="col-md-6">
+                    <input type="text" name="titulo" class="form-control" placeholder="Título de la tarea" required>
                 </div>
-                <div>
-                    <a href="/completar/{{ tarea.id }}" class="btn btn-sm {% if tarea.completada %}btn-warning{% else %}btn-success{% endif %}">
-                        {% if tarea.completada %}Desmarcar{% else %}✓{% endif %}
-                    </a>
+                <div class="col-md-6">
+                    <select name="parent_id" class="form-control">
+                        <option value="">Tarea Principal (sin padre)</option>
+                        {% for tarea in tareas %}
+                        <option value="{{ tarea.id }}">{{ tarea.titulo }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-12">
+                    <textarea name="descripcion" class="form-control" placeholder="Descripción (opcional)"></textarea>
+                </div>
+                <div class="col-12">
+                    <button type="submit" class="btn btn-primary">Agregar Tarea</button>
                 </div>
             </div>
-        </div>
-        {% endfor %}
+        </form>
+    </div>
+</div>
+
+<!-- Lista de Tareas -->
+<div class="card">
+    <div class="card-body">
+        <h5>📝 Tareas del Proyecto</h5>
+        {% if tareas %}
+            {% for tarea in tareas %}
+            <div class="border p-3 mb-3 rounded {% if tarea.completada %}bg-light{% endif %}">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div class="flex-grow-1">
+                        <h6 class="mb-1 {% if tarea.completada %}text-decoration-line-through text-muted{% endif %}">
+                            {{ tarea.titulo }}
+                        </h6>
+                        {% if tarea.descripcion %}
+                        <p class="mb-1 text-muted small">{{ tarea.descripcion }}</p>
+                        {% endif %}
+                        {% if tarea.parent_id %}
+                        <span class="badge bg-secondary">📂 Subtarea</span>
+                        {% else %}
+                        <span class="badge bg-primary">📁 Tarea Principal</span>
+                        {% endif %}
+                        <small class="text-muted d-block mt-1">
+                            📅 {{ tarea.fecha_creacion[:16] }}
+                        </small>
+                    </div>
+                    <div class="btn-group ms-3">
+                        <a href="/completar/{{ tarea.id }}" class="btn btn-sm {% if tarea.completada %}btn-warning{% else %}btn-success{% endif %}">
+                            {% if tarea.completada %}↶{% else %}✓{% endif %}
+                        </a>
+                        <a href="/eliminar/{{ tarea.id }}" class="btn btn-sm btn-danger" 
+                           onclick="return confirm('¿Eliminar esta tarea y sus subtareas?')">
+                            🗑️
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="text-center text-muted py-4">
+                <p>No hay tareas en este proyecto.</p>
+                <p>¡Crea tu primera tarea!</p>
+            </div>
+        {% endif %}
     </div>
 </div>
 {% endblock %}
